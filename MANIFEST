@@ -1,0 +1,16 @@
+Changes
+lib/SDS.pm
+lib/SDS/Algorithm.pm
+lib/SDS/Enrichment.pm
+lib/SDS/Enrichment/Peaks.pm
+lib/SDS/Genome.pm
+lib/SDS/Index.pm
+lib/SDS/SamToBed.pm
+lib/SDS/WigEncode.pm
+Makefile.PL
+MANIFEST			This list of files
+README
+t/00-load.t
+t/manifest.t
+t/pod-coverage.t
+t/pod.t
