@@ -13,6 +13,118 @@ use Pod::Usage;
 
 with 'MooseX::Getopt';
 
+# Define the Moose options accepted at the command-line
+
+has man	=>	(
+	is				=>	'ro',
+	isa				=>	'Bool',
+	documentation	=>	"Flag which displays the POD for this program.",
+);
+
+has genome	=>	(
+	is				=>	'ro',
+	isa				=>	'Str',
+	required		=>	1,
+	lazy			=>	1,
+	documentation	=>	"String abbreviation of the genome to which the reads were mapped to. For example: hg19 or mm9.",
+	default			=>	sub { pod2usage(
+			-message	=>	"\n\nYou must define a genome.\n\n",
+			-verbose	=>	1,
+			-exitval	=>	2,
+			-input		=>	"$FindBin::Bin/../lib/SDS.pm",
+		);
+	},
+);
+
+has input	=>	(
+	is				=>	'ro',
+	isa				=>	'Str',
+	required		=>	1,
+	lazy			=>	1,
+	documentation	=>	"The file path to the input file in SAM format.",
+	default			=>	sub { pod2usage(
+			-message	=>	"\n\nYou must define an input file.\n\n",
+			-verbose	=>	1,
+			-exitval	=>	2,
+			-input		=>	"$FindBin::Bin/../lib/SDS.pm",
+		);
+	},
+);
+
+has ip	=>	(
+	is				=>	'ro',
+	isa				=>	'Str',
+	required		=>	1,
+	lazy			=>	1,
+	documentation	=>	"The file path to the IP file in SAM format.",
+	default			=>	sub { pod2usage(
+			-message	=>	"\n\nYou must define an IP file.\n\n",
+			-verbose	=>	1,
+			-exitval	=>	2,
+			-input		=>	"$FindBin::Bin/../lib/SDS.pm",
+		);
+	},
+);
+
+has name	=>	(
+	is				=>	'ro',
+	isa				=>	'Str',
+	documentation	=>	"A string defining the name of the experiment. Default: 'SDS_Experiment'.",
+	default			=>	'SDS_Experiment',
+);
+
+has sds_interval	=>	(
+	is				=>	'ro',
+	isa				=>	'Int',
+	required		=>	1,
+	documentation	=>	"Integer value setting the size (bp) of the intervals used to calculate the sequence scaling factor. Default = 1000.",
+	default			=>	1000,
+);
+
+has enrichment_interval	=>	(
+	is				=>	'ro',
+	isa				=>	'Int',
+	required		=>	1,
+	documentation	=>	"Integer value setting the size (bp) of the intervals used to calculate the relative enrichment of the IP reads over the input reads. Default = 10.",
+	default			=>	10,
+);
+
+has peak_size	=>	(
+	is				=>	'ro',
+	isa				=>	'Int',
+	required		=>	1,
+	documentation	=>	"Integer value setting the size (bp) of the intervals used to define the minimum width of a peak when determining coordinates of enriched regions. Value set must be divisible by the enrichment_interval. Default = 200.",
+	default			=>	200,
+);
+
+sub execute {
+	my $self = shift;
+	# Check to see whether the user has flagged to see the manual
+	if ( $self->man ) {
+		pod2usage(
+			-verbose	=>	2,
+			-exitval	=>	1,
+			-input		=>	"$FindBin::Bin/../lib/SDS.pm",
+		);
+	}
+	# Check that the peak_size is valid based on the enrichment_interval
+	$self->_valid_peak_size;
+}
+
+# The following is a private subroutine used to determine whether the
+# user-defined peak_size is valid
+sub _valid_peak_size {
+	my $self = shift;
+	if ( $self->peak_size % $self->enrichment_interval ) {
+		pod2usage(
+				-message	=>	"\n\nYou must define a peak_size, which is evenly divisible by the enrichment_interval.\n\n",
+				-verbose	=>	1,
+				-exitval	=>	2,
+				-input		=>	"$FindBin::Bin/../lib/SDS.pm",
+		);
+	}
+} # end _valid_peak_size
+
 1;
 
 __END__
@@ -21,41 +133,20 @@ __END__
 
 SDS - The sequence depth scaling algorithm implemented in Perl.
 
-=head1 SYNOPSIS
+=head1 DESCRIPTION
 
 This module is designed to be used as the 'Controller' between the script
 'SDS/bin/sequenceDepthScalingPeaks.pl' and the business logic found un the
 sub-tree modules of SDS.
+
+=head1 SYNOPSIS
 
 sequenceDepthScalingPeaks.pl {OPTIONS} --genome --input [PATH TO INPUT FILE] 
 --ip [PATH TO IP FILE] 
 
 Example usage:
 
-sequenceDepthScalingPeaks \
-	--genome hg19 \
-	--input input.sam \
-	--ip PolII.sam \
-	--name hES_PolII
-
-Options:
-
-	--genome		The abbreviation for the genome the reads are mapped
-					to. e.g. hg19 or mm9.
-	--input			File path to the SAM-format mapped input reads.
-	--ip			File path to the SAM-format mapped ip reads.
-	--sds_interval		Integer value for the size (bp) of the intervals 
-						used to partition the genome for the sequence depth 
-						scaling algorithm. Default = 1000.
-	--enrichment_interval		Integer value for the size (bp) of the
-								intervals used to calculate the enrichment
-								of IP to input DNA. Default = 10.
-	--peak_size			Integer value for the minimum considred peak-width
-						used when determining the BED-format coordinates of
-						enriched regions. Value specified must be divisible 
-						by the --enrichment_interval. Default = 200.
-	--name				String specifying the name of the experiment.
-						Default = 'SDS_Experiment'.
+sequenceDepthScalingPeaks --genome hg19 --input input.sam --ip PolII.sam --name hES_PolII
 
 =head1 OPTIONS
 
