@@ -1,6 +1,7 @@
 package SDS;
 
 use Moose;
+use FindBin;
 use lib "$FindBin::Bin/../lib";
 use SDS::Algorithm;
 use SDS::Enrichment;
@@ -10,6 +11,7 @@ use SDS::Index;
 use SDS::SamToBed;
 use SDS::WigEncode;
 use Pod::Usage;
+use Data::Dumper;
 
 with 'MooseX::Getopt';
 
@@ -109,6 +111,17 @@ sub execute {
 	}
 	# Check that the peak_size is valid based on the enrichment_interval
 	$self->_valid_peak_size;
+	# Construct an instance of SDS::Genome in order to fetch the chromosome
+	# sizes from the UCSC MySQL server
+	my $genome = SDS::Genome->new(
+		genome	=>	$self->genome,
+	);
+	my ($chromosome_sizes, $chromosome_sizes_fh) =
+	$genome->chromosome_sizes;
+	# Construct an instance of SDS::SamToBed in order to convert the
+	# user-defined SAM files to BED format.
+#	my $sam_to_bed = SDS::SamToBed->new(
+#	);
 }
 
 # The following is a private subroutine used to determine whether the
