@@ -1,53 +1,118 @@
 package SDS;
 
-use 5.006;
-use strict;
-use warnings;
+use Moose;
+use lib "$FindBin::Bin/../lib";
+use SDS::Algorithm;
+use SDS::Enrichment;
+use SDS::Enrichment::Peaks;
+use SDS::Genome;
+use SDS::Index;
+use SDS::SamToBed;
+use SDS::WigEncode;
+use Pod::Usage;
+
+with 'MooseX::Getopt';
+
+1;
+
+__END__
 
 =head1 NAME
 
-SDS - The great new SDS!
-
-=head1 VERSION
-
-Version 0.01
-
-=cut
-
-our $VERSION = '0.01';
-
+SDS - The sequence depth scaling algorithm implemented in Perl.
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+This module is designed to be used as the 'Controller' between the script
+'SDS/bin/sequenceDepthScalingPeaks.pl' and the business logic found un the
+sub-tree modules of SDS.
 
-Perhaps a little code snippet.
+sequenceDepthScalingPeaks.pl {OPTIONS} --genome --input [PATH TO INPUT FILE] 
+--ip [PATH TO IP FILE] 
 
-    use SDS;
+Example usage:
 
-    my $foo = SDS->new();
-    ...
+sequenceDepthScalingPeaks \
+	--genome hg19 \
+	--input input.sam \
+	--ip PolII.sam \
+	--name hES_PolII
 
-=head1 EXPORT
+Options:
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+	--genome		The abbreviation for the genome the reads are mapped
+					to. e.g. hg19 or mm9.
+	--input			File path to the SAM-format mapped input reads.
+	--ip			File path to the SAM-format mapped ip reads.
+	--sds_interval		Integer value for the size (bp) of the intervals 
+						used to partition the genome for the sequence depth 
+						scaling algorithm. Default = 1000.
+	--enrichment_interval		Integer value for the size (bp) of the
+								intervals used to calculate the enrichment
+								of IP to input DNA. Default = 10.
+	--peak_size			Integer value for the minimum considred peak-width
+						used when determining the BED-format coordinates of
+						enriched regions. Value specified must be divisible 
+						by the --enrichment_interval. Default = 200.
+	--name				String specifying the name of the experiment.
+						Default = 'SDS_Experiment'.
 
-=head1 SUBROUTINES/METHODS
+=head1 OPTIONS
 
-=head2 function1
+=over 8
 
-=cut
+=item B<--help>
 
-sub function1 {
-}
+Print a brief help message and then exit.
 
-=head2 function2
+=item B<--usage>
 
-=cut
+Print a brief help message and then exit.
 
-sub function2 {
-}
+=item B<?>
+
+Print a brief help message and then exit.
+
+=item B<--man>
+
+Display the full manual in POD format for SDS.
+
+=item B<--genome>
+
+The abbreviation for the genome to which the reads for the samples are
+mapped.
+
+=item B<--input>
+
+The file path to the SAM-format mapped input reads.
+
+=item B<--ip>
+
+The file path to the SAM-format mapped IP reads.
+
+=item B<--sds_interval>
+
+Integer value for the size (in bp) for the interval windows used to
+calculate the sequence scaling factor in the sequence depth scaling
+algorithm. Default = 1000.
+
+=item B<--enrichment_interval>
+
+Integer value for the size (in bp) for the interval windows used to
+calculate the relative enrichment of the IP read density relative to the
+input read density. Default = 10.
+
+=item B<--peak_size>
+
+Integer value for the size (in bp) set as the minimum length considered
+when searching for enriched genomic coordinates. Value set must be
+divisible by the --enrichment_interval value. Default = 200.
+
+=item B<--name>
+
+String specifying the name of the experiment. Default = 'SDS_Experiment'.
+
+=back
 
 =head1 AUTHOR
 
@@ -58,9 +123,6 @@ Jason R Dobson, C<< <dobson187 at gmail.com> >>
 Please report any bugs or feature requests to C<bug-sds at rt.cpan.org>, or through
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=SDS>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
-
-
-
 
 =head1 SUPPORT
 
@@ -94,6 +156,31 @@ L<http://search.cpan.org/dist/SDS/>
 
 =head1 ACKNOWLEDGEMENTS
 
+SDS Algorithm:
+
+Diaz, A., Park, K., Lim, D. A., & Song, J. S. (2012). Normalization, bias
+correction, and peak calling for ChIP-seq. Statistical applications in
+genetics and molecular biology, 11(3), Article 9.
+doi:10.1515/1544-6115.1750
+
+BEDTools:
+
+Quinlan, A. R., & Hall, I. M. (2010). BEDTools: a flexible suite of
+utilities for comparing genomic features. Bioinformatics, 26(6), 841–842.
+doi:10.1093/bioinformatics/btq033
+
+SAMTools
+
+Li, H., Handsaker, B., Wysoker, A., Fennell, T., Ruan, J., Homer, N.,
+Marth, G., et al. (2009). The Sequence Alignment/Map format and SAMtools.
+Bioinformatics, 25(16), 2078–2079. doi:10.1093/bioinformatics/btp352
+
+UCSC Genome Browser Interactions and Chromosome Definitions
+
+Fujita, P. A., Rhead, B., Zweig, A. S., Hinrichs, A. S., Karolchik, D.,
+Cline, M. S., Goldman, M., et al. (2011). The UCSC Genome Browser database:
+update 2011. Nucleic Acids Research, 39(Database issue), D876–82.
+doi:10.1093/nar/gkq963
 
 =head1 LICENSE AND COPYRIGHT
 
@@ -108,4 +195,3 @@ See http://dev.perl.org/licenses/ for more information.
 
 =cut
 
-1; # End of SDS
