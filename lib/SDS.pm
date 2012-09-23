@@ -134,7 +134,6 @@ sub execute {
 		);
 		$sds_structure->{'BED Files'}{$file_type} = $sam_to_bed->convert;
 	}
-	print Dumper $sds_structure;
 }
 
 # The following is a private subroutine used to determine whether the

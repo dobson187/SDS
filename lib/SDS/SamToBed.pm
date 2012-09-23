@@ -50,10 +50,17 @@ sub convert {
 		SUFFIX	=>	'_Raw_Reads.bed'
 	);
 	# Define a string for the command for bamToBed which will be executed
-	my $bam_to_bed_command = 'bamToBed -i ' . $temp_sorted_bam . ' > ' .
+	my $bam_to_bed_command = 'bamToBed -i ' . $temp_sorted_bam . '.bam > ' .
 	$temp_bed;
 	# Execute the command using the run_command subroutine
 	$self->run_command($bam_to_bed_command);
+	# Because the File::Temp object created for the $temp_sorted_bam was
+	# not created with a .bam extension, but samtools adds the extension,
+	# we have to manually remove this file when we are finished with it.
+	# Define a removal string.
+	my $rm_sorted_bam = 'rm ' . $temp_sorted_bam . '.bam';
+	# Execute the command
+	$self->run_command($rm_sorted_bam);
 	# Return the File::Temp object for the temporary BED file of reads
 	return $temp_bed;
 }
