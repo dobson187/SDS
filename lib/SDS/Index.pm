@@ -63,7 +63,15 @@ SDS::Index
 
 =head1 SYNOPSIS
 
+my $index_creator = SDS::Index->new(
+	chromosome_sizes	=>	\%chromosome_sizes_hash,
+	sds_interval		=>	1000,
+);
 
+# Use the create_index subroutine to return a File::Temp object which
+# points to the temporary file of BED coordiantes of the non-overlapping
+# genomic index.
+my $sds_index_fh = $index_creator->create_index;
 
 =head1 AUTHOR
 
