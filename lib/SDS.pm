@@ -134,6 +134,19 @@ sub execute {
 		);
 		$sds_structure->{'BED Files'}{$file_type} = $sam_to_bed->convert;
 	}
+	# Now that the BED format files have been created for the input and IP
+	# reads, now it is time to calculate the sequence scaling factor. First
+	# a non-overlapping index of length sds_interval for the user-defined
+	# genome must be defined.
+	#
+	# Create an SDS::Index object
+	my $index_creator = SDS::Index->new(
+		chromosome_sizes	=>	$chromosome_sizes,
+		sds_interval		=>	$self->sds_interval,
+	);
+	# Execute the create_index subroutine from SDS::Index, which will
+	# return a File::Temp object containing the temporary index file.
+	my $sds_index_fh = $index_creator->create_index;
 }
 
 # The following is a private subroutine used to determine whether the

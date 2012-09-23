@@ -1,53 +1,69 @@
 package SDS::Index;
 
-use 5.006;
-use strict;
-use warnings;
+use Moose;
+use FindBin;
+use Pod::Usage;
+use File::Temp;
+use Data::Dumper;
+
+# The following section contains the Moose constructor declarations.
+
+has chromosome_sizes	=>	(
+	is				=>	'ro',
+	isa				=>	'HashRef[Int]',
+	required		=>	1,
+);
+
+has sds_interval	=>	(
+	is				=>	'ro',
+	isa				=>	'Int',
+	required		=>	1,
+);
+
+# The create_index subroutine is the main function called by the SDS.pm
+# controller module of SDS. create_index partitions the genome defined in
+# the chromosome_sizes Hash Ref, into n non-overlapping intervals of size
+# sds_interval. The coordinates will be written to a File::Temp object,
+# which is returned to the main SDS.pm module.
+
+sub create_index {
+	my $self = shift;
+	# Pre-declare an Array Ref to hold the interval coordinates
+	my $index_coordinates = [];
+	# Iterate through the chromosomes, writing BED-format coordinates of
+	# size sds_interval, which don't overlap and store the coordinates in
+	# the index_coordinates Array Ref
+	foreach my $chromosome (keys %{$self->chromosome_sizes} ) {
+		for ( my $i = 0; $i <= $self->chromosome_sizes->{$chromosome}; $i
+			+= $self->sds_interval ) {
+			push (@$index_coordinates, 
+				join("\t", $chromosome, $i, ($i + $self->sds_interval - 1))
+			);
+		}
+	}
+	# Create a File::Temp object to store the index coordinates, write the
+	# coordinates to this file, and then return the File::Temp object to
+	# the SDS.pm module.
+	my $temp_index_file = File::Temp->new(
+		SUFFIX	=>	'_non-overlapping_index_' . $self->sds_interval .
+		'_bp.bed',
+	);
+	open my $temp_index_out, ">", $temp_index_file or die "Could not write to $temp_index_file, please check that you have the proper permissions to execute this program and have write access in the /tmp folder. $!\n";
+	print $temp_index_out join("\n", @$index_coordinates);
+	return $temp_index_file;
+}
+
+1;
+
+__END__
 
 =head1 NAME
 
-SDS::Index - The great new SDS::Index!
-
-=head1 VERSION
-
-Version 0.01
-
-=cut
-
-our $VERSION = '0.01';
-
+SDS::Index
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
 
-Perhaps a little code snippet.
-
-    use SDS::Index;
-
-    my $foo = SDS::Index->new();
-    ...
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
-=head1 SUBROUTINES/METHODS
-
-=head2 function1
-
-=cut
-
-sub function1 {
-}
-
-=head2 function2
-
-=cut
-
-sub function2 {
-}
 
 =head1 AUTHOR
 
@@ -108,4 +124,3 @@ See http://dev.perl.org/licenses/ for more information.
 
 =cut
 
-1; # End of SDS::Index
