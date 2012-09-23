@@ -14,7 +14,7 @@ has chromosome_sizes	=>	(
 	required		=>	1,
 );
 
-has sds_interval	=>	(
+has interval	=>	(
 	is				=>	'ro',
 	isa				=>	'Int',
 	required		=>	1,
@@ -23,7 +23,7 @@ has sds_interval	=>	(
 # The create_index subroutine is the main function called by the SDS.pm
 # controller module of SDS. create_index partitions the genome defined in
 # the chromosome_sizes Hash Ref, into n non-overlapping intervals of size
-# sds_interval. The coordinates will be written to a File::Temp object,
+# interval. The coordinates will be written to a File::Temp object,
 # which is returned to the main SDS.pm module.
 
 sub create_index {
@@ -31,13 +31,13 @@ sub create_index {
 	# Pre-declare an Array Ref to hold the interval coordinates
 	my $index_coordinates = [];
 	# Iterate through the chromosomes, writing BED-format coordinates of
-	# size sds_interval, which don't overlap and store the coordinates in
+	# size interval, which don't overlap and store the coordinates in
 	# the index_coordinates Array Ref
 	foreach my $chromosome (keys %{$self->chromosome_sizes} ) {
 		for ( my $i = 0; $i <= $self->chromosome_sizes->{$chromosome}; $i
-			+= $self->sds_interval ) {
+			+= $self->interval ) {
 			push (@$index_coordinates, 
-				join("\t", $chromosome, $i, ($i + $self->sds_interval - 1))
+				join("\t", $chromosome, $i, ($i + $self->interval - 1))
 			);
 		}
 	}
@@ -45,7 +45,7 @@ sub create_index {
 	# coordinates to this file, and then return the File::Temp object to
 	# the SDS.pm module.
 	my $temp_index_file = File::Temp->new(
-		SUFFIX	=>	'_non-overlapping_index_' . $self->sds_interval .
+		SUFFIX	=>	'_non-overlapping_index_' . $self->interval .
 		'_bp.bed',
 	);
 	open my $temp_index_out, ">", $temp_index_file or die "Could not write to $temp_index_file, please check that you have the proper permissions to execute this program and have write access in the /tmp folder. $!\n";
@@ -65,7 +65,7 @@ SDS::Index
 
 my $index_creator = SDS::Index->new(
 	chromosome_sizes	=>	\%chromosome_sizes_hash,
-	sds_interval		=>	1000,
+	interval		=>	1000,
 );
 
 # Use the create_index subroutine to return a File::Temp object which
