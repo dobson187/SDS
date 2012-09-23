@@ -111,6 +111,12 @@ sub execute {
 	}
 	# Check that the peak_size is valid based on the enrichment_interval
 	$self->_valid_peak_size;
+	# Create a data structure to hold the file paths defined by the user as
+	# well as the File::Temp objects created to hold the intermediate files
+	# created by SDS
+	my $sds_structure = {};
+	$sds_structure->{'SAM Files'}{Input} = $self->input;
+	$sds_structure->{'SAM Files'}{IP} = $self->ip;
 	# Construct an instance of SDS::Genome in order to fetch the chromosome
 	# sizes from the UCSC MySQL server
 	my $genome = SDS::Genome->new(
@@ -118,10 +124,17 @@ sub execute {
 	);
 	my ($chromosome_sizes, $chromosome_sizes_fh) =
 	$genome->chromosome_sizes;
-	# Construct an instance of SDS::SamToBed in order to convert the
-	# user-defined SAM files to BED format.
-#	my $sam_to_bed = SDS::SamToBed->new(
-#	);
+	# For the input and IP files, create an instance of SDS::SamToBed and
+	# convert the files to BED-format files. The File::Temp objects
+	# corresponding to the final BED-format files will be stored in the SDS
+	# structure.
+	foreach my $file_type ( keys %{$sds_structure->{'SAM Files'}} ) {
+		my $sam_to_bed = SDS::SamToBed->new(
+			sam_file				=>	$sds_structure->{'SAM Files'}{$file_type},
+		);
+		$sds_structure->{'BED Files'}{$file_type} = $sam_to_bed->convert;
+	}
+	print Dumper $sds_structure;
 }
 
 # The following is a private subroutine used to determine whether the
@@ -137,6 +150,8 @@ sub _valid_peak_size {
 		);
 	}
 } # end _valid_peak_size
+
+__PACKAGE__->meta->make_immutable;
 
 1;
 
