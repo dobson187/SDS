@@ -143,6 +143,8 @@ sub _valid_genome {
 	}
 }
 
+__PACKAGE__->meta->make_immutable;
+
 1;
 
 __END__
@@ -153,14 +155,12 @@ SDS::Genome
 
 =head1 SYNOPSIS
 
+my $genome = SDS::Genome->new(
+	genome	=>	'hg19',
+);
 
-=head1 SUBROUTINES/METHODS
-
-=head2 function1
-
-=head2 function2
-
-=head1 AUTHOR
+my ($chromosome_sizes_hash_ref, $chromosome_sizes_file_object) =
+$genome->chromosome_sizes;
 
 Jason R Dobson, C<< <dobson187 at gmail.com> >>
 
