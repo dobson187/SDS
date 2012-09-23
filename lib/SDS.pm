@@ -147,6 +147,19 @@ sub execute {
 	# Execute the create_index subroutine from SDS::Index, which will
 	# return a File::Temp object containing the temporary index file.
 	my $sds_index_fh = $index_creator->create_index;
+	# Calculate the sequence scaling factor, which will be used to
+	# multiplicatively scale the number of input reads per interval
+	#
+	# Create an SDS::Algorithm object
+	my $sds_algorithm = SDS::Algorithm->new(
+		input_bed	=>	$sds_structure->{'BED Files'}{Input},
+		ip_bed		=>	$sds_structure->{'BED Files'}{IP},
+		index_file	=>	$sds_index_fh,
+	);
+	# Execute the calculate_scaling_factor subroutine, which will return
+	# the sequence scaling factor.
+	my $sequence_scaling_factor = $sds_algorithm->calculate_scaling_factor;
+	print $sequence_scaling_factor, "\n";
 }
 
 # The following is a private subroutine used to determine whether the
