@@ -142,7 +142,7 @@ sub execute {
 	# Create an SDS::Index object
 	my $index_creator = SDS::Index->new(
 		chromosome_sizes	=>	$chromosome_sizes,
-		sds_interval		=>	$self->sds_interval,
+		interval			=>	$self->sds_interval,
 	);
 	# Execute the create_index subroutine from SDS::Index, which will
 	# return a File::Temp object containing the temporary index file.
@@ -159,7 +159,29 @@ sub execute {
 	# Execute the calculate_scaling_factor subroutine, which will return
 	# the sequence scaling factor.
 	my $sequence_scaling_factor = $sds_algorithm->calculate_scaling_factor;
-	print $sequence_scaling_factor, "\n";
+	# Create an instance of SDS::Index to create an index of
+	# enrichment_interval length intervals.
+	my $enrichment_index_creator = SDS::Index->new(
+		chromosome_sizes	=>	$chromosome_sizes,
+		interval			=>	$self->enrichment_interval,
+	);
+	my $enrichment_index_file = $enrichment_index_creator->create_index;
+	# Create an instance of SDS::Enrichment, which will be used to create a
+	# Wiggle format file with enrichment_interval length intervals with
+	# values corresponding to the ratio of IP tag-density to
+	# input-SDS-normalized tag density.
+	my $enrichment_estimates = SDS::Enrichment->new(
+		input_bed						=>	$sds_structure->{'BED Files'}{Input},
+		ip_bed							=>	$sds_structure->{'BED Files'}{IP},
+		index_file						=>	$enrichment_index_file,
+		enrichment_interval				=>	$self->enrichment_interval,
+		sequence_depth_scaling_factor	=>	$sequence_scaling_factor,
+		chromosome_sizes				=>	$chromosome_sizes,
+	);
+	# Run the calculate_enrichment_estimates subroutine to create a wiggle
+	# file of enrichment estimates. 
+	my $enrichment_estimates_wiggle_file =
+	$enrichment_estimates->calculate_enrichment_estimates;
 }
 
 # The following is a private subroutine used to determine whether the
